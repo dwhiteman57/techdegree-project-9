@@ -9,21 +9,19 @@ module.exports = (sequelize) => {
             primaryKey: true,
             autoIncrement: true,
         },
-        firstName: {
+        title: {
             type: Sequelize.STRING,
             allowNull: false,
         },
-        lastName: {
-            type: Sequelize.STRING,
+        description: {
+            type: Sequelize.TEXT,
             allowNull: false,
         },
-        emailAddress: {
+        estimatedTime: {
             type: Sequelize.STRING,
-            allowNull: false,
         },
-        password: {
+        materialsNeeded: {
             type: Sequelize.STRING,
-            allowNull: false,
         },
     }, { sequelize });
     Course.associate = (models) => {
