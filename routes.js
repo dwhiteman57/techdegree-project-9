@@ -1,12 +1,10 @@
 'use strict';
 
 const express = require('express');
-const { check, validationResult } = require('express-validator/check');
 const bcryptjs = require('bcryptjs');
 const auth = require('basic-auth');
 const data = require('./db').models;
-
-const { body } = require('express-validator');
+let Sequelize = require('sequelize');
 
 
 // Construct a router instance
@@ -80,47 +78,31 @@ router.get('/users', authenticateUser, asyncHandler(async (req, res) => {
 
 
 
+
+
+
+
 // Route that creates a new user
-router.post('/users', [
-    check('firstName')
-      .exists()
-      .withMessage('Please provide a value for "first name"'),
-    check('lastName')
-      .exists()
-      .withMessage('Please provide a value for "last name"'),
-    check('emailAddress')
-      .exists()
-      .withMessage('Please provide a value for "email"'),
-    check('password')
-      .exists()
-      .withMessage('Please provide a value for "password"'),
-    check('emailAddress')
-      .custom(async function(value) {
-        var user = await User.find({emailAddress:value});
-        return user.length == 0;
-      })
-      .withMessage('email address already exists'),
-], (req, res) => {
-    const errors = validationResult(req);
+router.post('/users', asyncHandler(async (req, res) => {
+  let userPassword = req.body.password;
 
-    // If there are validation errors
-    if (!errors.isEmpty()) {
-        const errorMessages = errors.array().map(error => error.msg);
-        res.status(400).json({ errors: errorMessages });
-    } else {
-        // Get the user from the request body.
-        const user = req.body;
+  // Hash the new user's password
+  userPassword = bcryptjs.hashSync(userPassword);
 
-        // Hash the new user's password.
-        user.password = bcryptjs.hashSync(user.password);
+  // Add the user to the db
+  data.User.create(req.body).then(() => {
+        // If validation passes it will get saved to the model
+        res.status(201).end();
+    }).catch(Sequelize.ValidationError, (error) => {
+        // Responds with validation errors
+        const eMessage = error.errors.map(e => e.message);
+        res.status(400).json({ error: eMessage });
+    }).catch((error) => {
+        // Any remaining errors
+        res.status(500).json({ error: error }); 
+    });
+}));
 
-        // Add the user to the db
-        data.User.create(user);
-
-        // Set the status to 201 Created and end the response.
-        return res.status(201).end();
-    }
-});
 
 
 
