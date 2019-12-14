@@ -79,30 +79,27 @@ router.get('/users', authenticateUser, asyncHandler(async (req, res) => {
 
 
 
-
-
-
 // Route that creates a new user
 router.post('/users', asyncHandler(async (req, res) => {
-  let userPassword = req.body.password;
+  const user = req.body;
 
-  // Hash the new user's password
-  userPassword = bcryptjs.hashSync(userPassword);
+  // Hash the new user's password.
+  if (user.password) {
+    user.password = await bcryptjs.hashSync(user.password);
+  }
 
   // Add the user to the db
-  data.User.create(req.body).then(() => {
-        // If validation passes it will get saved to the model
-        res.status(201).end();
-    }).catch(Sequelize.ValidationError, (error) => {
-        // Responds with validation errors
-        const eMessage = error.errors.map(e => e.message);
-        res.status(400).json({ error: eMessage });
-    }).catch((error) => {
-        // Any remaining errors
-        res.status(500).json({ error: error }); 
+   data.User.create(user)
+    .then(() => {
+      // if validation passes you will get saved model
+      res.status(201).json().end()
+    })
+    .catch(Sequelize.ValidationError, (error) => {
+      // responds with validation errors
+      let errorMessage = error.errors.map(error => error.message);
+      res.status(400).json({ error:errorMessage });
     });
 }));
-
 
 
 
