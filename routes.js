@@ -3,7 +3,7 @@
 const express = require('express');
 const bcryptjs = require('bcryptjs');
 const auth = require('basic-auth');
-const data = require('./db').models;
+const db = require('./db').models;
 let Sequelize = require('sequelize');
 
 
@@ -32,7 +32,7 @@ const authenticateUser = asyncHandler( async (req, res, next) => {
   
     if (credentials) {
       // Look for a user whose `email address` matches the credentials `name` property.
-      const user = await data.User.findOne({
+      const user = await db.User.findOne({
         where: {
           emailAddress: credentials.name,
         }
@@ -66,20 +66,23 @@ const authenticateUser = asyncHandler( async (req, res, next) => {
 
 
 
-// Get route that returns the currently authenticated user
+/* 
+USER ROUTES
+*/
+
+// GET route that returns the currently authenticated user
 router.get('/users', authenticateUser, asyncHandler(async (req, res) => {
-    const user = req.currentUser;
-      res.status(200).json({
-        emailAddress: user.emailAddress,
-        firstName: user.firstName,
-        lastName: user.lastName
-      }).end();
+    const user = await req.currentUser;
+    res.status(200).json({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      emailAddress: user.emailAddress,
+      id: user.id
+    }).end();
   }));
 
 
-
-
-// Route that creates a new user
+// POST route that creates a new user
 router.post('/users', asyncHandler(async (req, res) => {
   const user = req.body;
 
@@ -89,17 +92,109 @@ router.post('/users', asyncHandler(async (req, res) => {
   }
 
   // Add the user to the db
-   data.User.create(user)
+   db.User.create(user)
     .then(() => {
-      // if validation passes you will get saved model
+      // if validation passes, it will be saved to model
       res.status(201).json().end()
     })
     .catch(Sequelize.ValidationError, (error) => {
-      // responds with validation errors
+      // responds with Sequelize custom validation errors
       let errorMessage = error.errors.map(error => error.message);
       res.status(400).json({ error:errorMessage });
     });
 }));
+
+
+
+/* 
+COURSE ROUTES
+*/
+
+// GET route that returns a list of courses
+router.get('/courses', asyncHandler(async (req, res) => {
+  const courses = await db.Course.findAll();
+  res.status(200).json(courses).end();
+}));
+
+
+
+
+// GET route that returns a course for the provided id
+router.get('/courses/:id', asyncHandler(async (req, res) => {
+  const course = await db.Course.findByPk(req.params.id);
+  if (course) {
+    res.status(200).json(course).end();
+  } else {
+    res.status(400).json({message: 'Sorry, a course with this title is unavailable'}).end();
+  }
+  
+}));
+
+
+
+
+// POST route that creates a course, sets the location header to the URI for the course, and returns no content
+router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
+  const course = req.body;
+  const uniqueCourseId = await db.Course.findByPk(req.params.id);
+
+  db.Course.create(course)
+    .then(() => {
+      // if validation passes, it will be saved to model
+      res.status(201).location(`/courses/${uniqueCourseId}`).json().end();
+    })
+    .catch(Sequelize.ValidationError, (error) => {
+      // responds with Sequelize custom validation errors
+      let errorMessage = error.errors.map(error => error.message);
+      res.status(400).json({ error:errorMessage });
+    });
+}));
+
+
+
+// PUT route that updates a course and returns no content
+router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
+  const course = await db.Course.findByPk(req.params.id);
+
+  if (req.body.title && req.body.description) {
+    course.update(req.body)
+    .then(() => {
+      // if validation passes, it will update model
+      res.status(204).json(course).end();
+    })
+    .catch(Sequelize.ValidationError, (error) => {
+      // responds with Sequelize custom validation errors
+      let errorMessage = error.errors.map(error => error.message);
+      res.status(400).json({ error:errorMessage });
+    });
+  } else {
+    res.status(400).json({ message: "Please fill out both the title and description fields" });
+  }
+}));
+
+
+
+// DELETE route that deletes a course
+router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
+  const course = await db.Course.findByPk(req.params.id);
+
+  if (course) {
+    course.destroy()
+    .then(() => {
+      // if validation passes, it will be saved to model
+      res.status(204).json(course).end();
+    })
+    .catch(Sequelize.ValidationError, (error) => {
+      // responds with Sequelize custom validation errors
+      let errorMessage = error.errors.map(error => error.message);
+      res.status(400).json({ error:errorMessage });
+    });
+  } else {
+    res.status(404).json();
+  }
+
+}));
+
 
 
 

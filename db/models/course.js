@@ -12,10 +12,20 @@ module.exports = (sequelize) => {
         title: {
             type: Sequelize.STRING,
             allowNull: false,
+            validate: {
+                notNull: {
+                  msg: 'Title is required'
+                }
+            }
         },
         description: {
             type: Sequelize.TEXT,
             allowNull: false,
+            validate: {
+                notNull: {
+                  msg: 'Description is required'
+                }
+            }
         },
         estimatedTime: {
             type: Sequelize.STRING,
@@ -29,6 +39,11 @@ module.exports = (sequelize) => {
             foreignKey: {
                 fieldName: 'userId',
                 allowNull: false,
+                validate: {
+                    notNull: {
+                      msg: 'User ID is required'
+                    }
+                }
             },
         });
     };
