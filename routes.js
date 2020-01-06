@@ -95,7 +95,7 @@ router.post('/users', asyncHandler(async (req, res) => {
    db.User.create(user)
     .then(() => {
       // if validation passes, it will be saved to model
-      res.status(201).json().end()
+      res.status(201).location('/').json().end()
     })
     .catch(Sequelize.ValidationError, (error) => {
       // responds with Sequelize custom validation errors
