@@ -107,6 +107,8 @@ router.post('/users', asyncHandler(async (req, res) => {
 
 
 
+
+
 /* 
 COURSE ROUTES
 */
@@ -116,7 +118,6 @@ router.get('/courses', asyncHandler(async (req, res) => {
   const courses = await db.Course.findAll();
   res.status(200).json(courses).end();
 }));
-
 
 
 
@@ -133,28 +134,7 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 
 
 
-// // POST route that creates a course, sets the location header to the URI for the course, and returns no content
-// router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
-//   const course = req.body;
-  
-
-//   db.Course.create(course)
-//     .then(() => {
-//       // if validation passes, it will be saved to model
-//       res.status(201).location('/courses/').json().end();
-//       console.log(course.id);
-//     })
-//     .catch(Sequelize.ValidationError, (error) => {
-//       // responds with Sequelize custom validation errors
-//       let errorMessage = error.errors.map(error => error.message);
-//       res.status(400).json({ error:errorMessage });
-//     });
-// }));
-
-
-
-
-// Create a course
+// POST route that creates a course, sets the location header to the URI for the course, and returns no content
 router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
   await db.Course.create(req.body)
   .then(course => {
@@ -165,11 +145,7 @@ router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
     let errorMessage = error.errors.map(error => error.message);
     res.status(400).json({ error:errorMessage });
   });
-  
 }));
-
-
-
 
 
 
@@ -214,7 +190,6 @@ router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) =>
     res.status(404).json();
   }
 }));
-
 
 
 
