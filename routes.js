@@ -7,6 +7,7 @@ const db = require('./db').models;
 let Sequelize = require('sequelize');
 
 
+
 // Construct a router instance
 const router = express.Router();
 
@@ -132,23 +133,43 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 
 
 
+// // POST route that creates a course, sets the location header to the URI for the course, and returns no content
+// router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
+//   const course = req.body;
+  
 
-// POST route that creates a course, sets the location header to the URI for the course, and returns no content
+//   db.Course.create(course)
+//     .then(() => {
+//       // if validation passes, it will be saved to model
+//       res.status(201).location('/courses/').json().end();
+//       console.log(course.id);
+//     })
+//     .catch(Sequelize.ValidationError, (error) => {
+//       // responds with Sequelize custom validation errors
+//       let errorMessage = error.errors.map(error => error.message);
+//       res.status(400).json({ error:errorMessage });
+//     });
+// }));
+
+
+
+
+// Create a course
 router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
-  const course = req.body;
-  const uniqueCourseId = await db.Course.findByPk(req.params.id);
-
-  db.Course.create(course)
-    .then(() => {
-      // if validation passes, it will be saved to model
-      res.status(201).location(`/courses/${uniqueCourseId}`).json().end();
-    })
-    .catch(Sequelize.ValidationError, (error) => {
-      // responds with Sequelize custom validation errors
-      let errorMessage = error.errors.map(error => error.message);
-      res.status(400).json({ error:errorMessage });
-    });
+  await db.Course.create(req.body)
+  .then(course => {
+    res.status(201).location('/courses/' + course.id).end();
+  })
+  .catch(Sequelize.ValidationError, (error) => {
+    // responds with Sequelize custom validation errors
+    let errorMessage = error.errors.map(error => error.message);
+    res.status(400).json({ error:errorMessage });
+  });
+  
 }));
+
+
+
 
 
 
@@ -192,7 +213,6 @@ router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) =>
   } else {
     res.status(404).json();
   }
-
 }));
 
 
